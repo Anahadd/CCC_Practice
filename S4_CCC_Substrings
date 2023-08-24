@@ -1,0 +1,48 @@
+def build_suffix_array(s):
+    n = len(s)
+    indices = list(range(n))
+    ranks = [ord(ch) for ch in s]
+
+    for k in range(1, n, n):
+        ranks_tuple = [(ranks[i], ranks[i + k] if i + k < n else -1) for i in indices]
+        sorted_indices = sorted(range(n), key=lambda x: ranks_tuple[x])
+        new_ranks = [0] * n
+
+        for i in range(1, n):
+            if ranks_tuple[sorted_indices[i]] != ranks_tuple[sorted_indices[i - 1]]:
+                new_ranks[sorted_indices[i]] = new_ranks[sorted_indices[i - 1]] + 1
+            else:
+                new_ranks[sorted_indices[i]] = new_ranks[sorted_indices[i - 1]]
+
+        indices = sorted_indices
+        ranks = new_ranks
+
+    return indices
+
+def build_lcp(s, suffix_array):
+    n = len(s)
+    ranks = [0] * n
+
+    for i in range(n):
+        ranks[suffix_array[i]] = i
+
+    lcp = [0] * (n - 1)
+    h = 0
+
+    for i in range(n):
+        if ranks[i] == n - 1:
+            h = 0
+            continue
+        j = suffix_array[ranks[i] + 1]
+        while i + h < n and j + h < n and s[i + h] == s[j + h]:
+            h += 1
+        lcp[ranks[i]] = h
+        if h > 0:
+            h -= 1
+
+    return lcp
+
+def distinct_substrings(s):
+    suffix_array = build_suffix_array(s)
+    lcp_array = build_lcp(s, suffix_array)
+    return sum(len(s) - i for i in suffix_array) - sum(lcp_array)
